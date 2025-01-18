@@ -13,7 +13,7 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/auth/signup', { name, email, password });
+      await axios.post('https://edu-leaderboard-backend.vercel.app/auth/signup', { name, email, password });
       navigate('/login'); // Navigate to login on success
     } catch (err) {
       setError(err.response?.data?.error || 'Unexpected error');
