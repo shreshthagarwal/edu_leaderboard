@@ -12,12 +12,12 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const leaderboardRes = await axios.get('http://localhost:5000/student/leaderboard', {
+        const leaderboardRes = await axios.get('https://edu-leaderboard-backend.vercel.app/student/leaderboard', {
           headers: { Authorization: localStorage.getItem('token') },
         });
         setLeaderboard(leaderboardRes.data);
 
-        const userRes = await axios.get('http://localhost:5000/auth/me', {
+        const userRes = await axios.get('https://edu-leaderboard-backend.vercel.app/auth/me', {
           headers: { Authorization: localStorage.getItem('token') },
         });
         setUserName(userRes.data.name);
@@ -38,7 +38,7 @@ const Dashboard = () => {
 
     axios
       .post(
-        'http://localhost:5000/student/request',
+        'https://edu-leaderboard-backend.vercel.app/student/request',
         { taskDescription },
         { headers: { Authorization: localStorage.getItem('token') } }
       )
