@@ -13,7 +13,7 @@ const AdminPanel = () => {
 
   const fetchRequests = () => {
     axios
-      .get('http://localhost:5000/admin/requests', {
+      .get('https://edu-leaderboard-backend.vercel.app//admin/requests', {
         headers: { Authorization: localStorage.getItem('token') },
       })
       .then((res) => setRequests(res.data))
@@ -28,7 +28,7 @@ const AdminPanel = () => {
     }
 
     axios
-      .post(`http://localhost:5000/admin/requests/${id}`, body, {
+      .post(`https://edu-leaderboard-backend.vercel.app//admin/requests/${id}`, body, {
         headers: { Authorization: localStorage.getItem('token') },
       })
       .then(() => {
