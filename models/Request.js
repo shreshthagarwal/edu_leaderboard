@@ -6,6 +6,6 @@ const requestSchema = new mongoose.Schema({
   pointsRequested: { type: Number },
   status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
   customPoints: { type: Number },
-});
+}, { timestamps: true }); // Enable timestamps
 
 module.exports = mongoose.model('Request', requestSchema);
