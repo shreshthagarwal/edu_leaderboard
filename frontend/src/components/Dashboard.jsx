@@ -31,24 +31,27 @@ const Dashboard = () => {
 
   // Handle task submission
   const handleRequestTask = () => {
-    if (!taskDescription.trim()) {
-      alert('Please enter a task description');
-      return;
-    }
+  if (!taskDescription.trim()) {
+    alert('Please enter a task description');
+    return;
+  }
 
-    axios
-      .post(
-        'https://edu-leaderboard-backend.vercel.app/student/request',
-        { taskDescription },
-        { headers: { Authorization: localStorage.getItem('token') } }
-      )
-      .then((res) => {
-        alert(res.data.message);
-        setTaskDescription('');
-        setIsPopupOpen(false);
-      })
-      .catch((err) => alert(err.response?.data?.error || 'An error occurred'));
-  };
+  axios
+    .post(
+      'https://edu-leaderboard-backend.vercel.app/student/request',
+      { taskDescription },
+      { headers: { Authorization: localStorage.getItem('token') } }
+    )
+    .then((res) => {
+      alert(res.data.message);
+      setTaskDescription('');
+      setIsPopupOpen(false);
+    })
+    .catch((err) => {
+      const errorMessage = err.response?.data?.error || 'An error occurred';
+      alert(errorMessage);
+    });
+};
 
   const getRankStyle = (rank, studentName) => {
     if (rank === 1) return 'border-4 border-yellow-500'; // Gold
