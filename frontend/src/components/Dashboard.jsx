@@ -77,12 +77,12 @@ const Dashboard = () => {
         <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 bg-clip-text text-transparent">
           Leaderboard
         </h1>
-        <button
+{/*         <button
           onClick={() => setIsPopupOpen(true)}
           className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-400 to-blue-400 rounded-lg hover:from-green-500 hover:to-blue-500 shadow-md"
         >
           Request Points
-        </button>
+        </button> */}
       </div>
 
       {/* Welcome Section */}
