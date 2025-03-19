@@ -76,24 +76,24 @@ const AdminPanel = () => {
 
       {/* Requests Section */}
       <h2 className="text-xl font-semibold mb-2">Requests</h2>
-      <div className="overflow-y-auto mb-6">
-        {requests.map((req) => (
-          <div key={req._id} className="p-4 mb-4 bg-gray-800 rounded-lg shadow-md flex justify-between items-center">
-            <div>
-              <p className="text-lg font-semibold">{req.studentId.name}</p>
-              <p className="text-sm text-gray-400">{req.studentId.email}</p>
-              <p className="mt-2">{req.taskDescription}</p>
-            </div>
-            <button onClick={() => openPopup(req)} className="px-4 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600">
-              Review
-            </button>
-          </div>
-        ))}
+      <div className="overflow-y-auto mb-6 h-[50vh]"> {/* 50% of the viewport height */}
+  {requests.map((req) => (
+    <div key={req._id} className="p-4 mb-4 bg-gray-800 rounded-lg shadow-md flex justify-between items-center">
+      <div>
+        <p className="text-lg font-semibold">{req.studentId.name}</p>
+        <p className="text-sm text-gray-400">{req.studentId.email}</p>
+        <p className="mt-2">{req.taskDescription}</p>
       </div>
+      <button onClick={() => openPopup(req)} className="px-4 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600">
+        Review
+      </button>
+    </div>
+  ))}
+</div>
 
       {/* Assign Points Section */}
       <h2 className="text-xl font-semibold mb-2">Assign Points</h2>
-      <div className="overflow-y-auto">
+      <div className="overflow-y-auto mb-6 h-[50vh]"">
         {leaderboard.map((student) => (
           <div key={student._id} className="p-4 mb-2 bg-gray-800 rounded-lg shadow-md flex justify-between items-center cursor-pointer hover:bg-gray-700" onClick={() => openPopup(student, true)}>
             <p className="text-lg font-semibold">{student.name}</p>
