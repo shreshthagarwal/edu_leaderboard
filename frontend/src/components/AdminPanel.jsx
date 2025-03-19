@@ -24,10 +24,10 @@ const AdminPanel = () => {
 
   const fetchLeaderboard = () => {
     axios.get('https://edu-leaderboard-backend.vercel.app/student/leaderboard', {
-  headers: { Authorization: localStorage.getItem('token') },
-})
-.then((res) => console.log(res.data)) // Replace with setLeaderboard(res.data) if needed
-.catch((err) => console.error('Error:', err.response?.data || err));
+      headers: { Authorization: localStorage.getItem('token') },
+    })
+    .then((res) => setLeaderboard(res.data)) // Update the leaderboard state
+    .catch((err) => console.error('Error:', err.response?.data || err));
   };
 
   const handleUpdateRequest = (id, status, customPoints = null) => {
