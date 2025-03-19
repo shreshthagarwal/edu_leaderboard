@@ -39,5 +39,21 @@ router.post('/requests/:id', authenticate, checkAdminRole, async (req, res) => {
   }
 });
 
+// Assign points manually
+router.post('/assign-points', authenticate, checkAdminRole, async (req, res) => {
+  const { id, points } = req.body;
+
+  try {
+    const student = await User.findById(id);
+    if (!student) return res.status(404).json({ error: 'Student not found' });
+
+    student.points += points; // Add points to the student
+    await student.save();
+
+    res.status(200).json({ message: 'Points assigned successfully', student });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 module.exports = router;
