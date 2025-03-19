@@ -6,10 +6,11 @@ const router = express.Router();
 
 // Middleware to check role
 const checkStudentRole = (req, res, next) => {
-  if (req.user.role !== 'student') return res.status(403).send('Access denied');
+  if (req.user.role !== 'student' && req.user.role !== 'admin') {
+    return res.status(403).send('Access denied');
+  }
   next();
 };
-
 // Leaderboard route
 router.get('/leaderboard', authenticate, checkStudentRole, async (req, res) => {
   const students = await User.find({ role: 'student' }).sort({ points: -1 });
