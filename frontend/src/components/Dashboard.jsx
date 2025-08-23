@@ -1,143 +1,236 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import logo from '../assets/logo.png'; // Update with the correct path to your logo
+import { useAuth } from '../contexts/AuthContext';
+
+const domainNames = {
+  webd: 'Web Development',
+  aiml: 'AI/ML',
+  dsa: 'Data Structures & Algorithms',
+  tasks: 'My Tasks'
+};
 
 const Dashboard = () => {
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [taskDescription, setTaskDescription] = useState('');
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [userName, setUserName] = useState(''); // State for user name
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [leaderboardData, setLeaderboardData] = useState({});
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [points, setPoints] = useState(0);
+  const { user, logout } = useAuth();
+  const domains = ['webd', 'aiml', 'dsa', 'tasks'];
 
-  // Fetch leaderboard data and user name
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const leaderboardRes = await axios.get('https://edu-leaderboard-backend.vercel.app/student/leaderboard', {
-          headers: { Authorization: localStorage.getItem('token') },
+        setLoading(true);
+        setError('');
+        
+        // Only fetch leaderboard data for domain tabs (not for tasks)
+        const leaderboardPromises = domains
+          .filter(domain => domain !== 'tasks')
+          .map(domain => 
+            axios.get(`http://localhost:5000/api/leaderboard/${domain}`)
+              .catch(error => {
+                console.error(`Error fetching ${domain} leaderboard:`, error);
+                return { data: { success: true, data: [] } }; // Return empty data on error
+              })
+          );
+        
+        const leaderboardResults = await Promise.all(leaderboardPromises);
+        const leaderboardMap = {};
+        
+        domains.filter(domain => domain !== 'tasks').forEach((domain, index) => {
+          leaderboardMap[domain] = leaderboardResults[index]?.data?.data || [];
         });
-        setLeaderboard(leaderboardRes.data);
-
-        const userRes = await axios.get('https://edu-leaderboard-backend.vercel.app/auth/me', {
-          headers: { Authorization: localStorage.getItem('token') },
-        });
-        setUserName(userRes.data.name);
+        
+        setLeaderboardData(leaderboardMap);
+        
+        // Fetch user tasks if logged in and on tasks tab
+        if (user && selectedTab === domains.indexOf('tasks')) {
+          try {
+            const tasksRes = await axios.get('http://localhost:5000/api/tasks', {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setTasks(tasksRes.data.tasks || []);
+            setPoints(tasksRes.data.user?.points || 0);
+          } catch (taskError) {
+            console.error('Error fetching tasks:', taskError);
+            setTasks([]);
+          }
+        }
+        
       } catch (err) {
-        console.error(err);
+        console.error('API Error:', err);
+        setError(err.response?.data?.message || 'Failed to fetch data');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [user, selectedTab]);
 
-  // Handle task submission
-  const handleRequestTask = () => {
-  if (!taskDescription.trim()) {
-    alert('Please enter a task description');
-    return;
-  }
-
-  axios
-    .post(
-      'https://edu-leaderboard-backend.vercel.app/student/request',
-      { taskDescription },
-      { headers: { Authorization: localStorage.getItem('token') } }
-    )
-    .then((res) => {
-      alert(res.data.message);
-      setTaskDescription('');
-      setIsPopupOpen(false);
-    })
-    .catch((err) => {
-      const errorMessage = err.response?.data?.error || 'An error occurred';
-      alert(errorMessage);
-    });
-};
-
-  const getRankStyle = (rank, studentName) => {
-    if (rank === 1) return 'border-4 border-yellow-500'; // Gold
-    if (rank === 2) return 'border-4 border-gray-400'; // Silver
-    if (rank === 3) return 'border-4 border-amber-700'; // Bronze
-    if (studentName === userName) return 'border-2 border-green-400'; // Highlight current user
-    return ''; // No special border
+  const renderLeaderboard = (domain) => {
+    const data = leaderboardData[domain] || [];
+    
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white rounded-lg overflow-hidden">
+          <thead className="bg-gray-800 text-white">
+            <tr>
+              <th className="px-4 py-2">Rank</th>
+              <th className="px-4 py-2 text-left">Name</th>
+              <th className="px-4 py-2">Branch</th>
+              <th className="px-4 py-2">Year</th>
+              <th className="px-4 py-2">Points</th>
+              <th className="px-4 py-2">Attendance</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((user, index) => (
+              <tr key={user.email} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                <td className="px-4 py-2 text-center">{user.rank}</td>
+                <td className="px-4 py-2">{user.name}</td>
+                <td className="px-4 py-2 text-center">{user.branch}</td>
+                <td className="px-4 py-2 text-center">{user.year}</td>
+                <td className="px-4 py-2 text-center">{user.points}</td>
+                <td className="px-4 py-2 text-center">{user.attendance}%</td>
+              </tr>
+            ))}
+            {data.length === 0 && (
+              <tr>
+                <td colSpan="6" className="px-4 py-4 text-center text-gray-500">
+                  No data available
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    );
   };
 
-  const getRankSymbol = (rank) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    if (rank === 4 || rank === 5) return '⭐';
-    return rank; // Display rank number for others
-  };
+  const renderTasks = () => {
+    if (!user) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Please log in to view your tasks</p>
+        </div>
+      );
+    }
 
-  return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Navbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-800 shadow-md">
-        <img src={logo} alt="Logo" className="w-10 h-10" />
-        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 bg-clip-text text-transparent">
-          Leaderboard
-        </h1>
-{/*         <button
-          onClick={() => setIsPopupOpen(true)}
-          className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-400 to-blue-400 rounded-lg hover:from-green-500 hover:to-blue-500 shadow-md"
-        >
-          Request Points
-        </button> */}
-      </div>
-
-      {/* Welcome Section */}
-      <h2 className="text-center text-2xl font-semibold text-white py-4">
-  Welcome, {userName || 'Guest'}
-</h2>
-
-
-      {/* Leaderboard Section */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <ul className="space-y-2">
-          {leaderboard.map((student, index) => (
-            <li
-              key={index}
-              className={`flex items-center justify-between p-4 bg-gray-800 rounded-lg shadow-md ${getRankStyle(index + 1, student.name)}`}
-            >
-              <span className="w-8 text-center">
-                {getRankSymbol(index + 1)}
-              </span>
-              <span>{student.name}</span>
-              <span>{student.points} points</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Popup for Task Description */}
-      {isPopupOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-80 p-6 bg-gray-800 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">Request Points</h2>
-            <textarea
-              placeholder="Enter task description"
-              value={taskDescription}
-              onChange={(e) => setTaskDescription(e.target.value)}
-              className="w-full p-2 mb-4 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              rows="4"
-            ></textarea>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => setIsPopupOpen(false)}
-                className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-lg hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRequestTask}
-                className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-400 to-blue-400 rounded-lg hover:from-green-500 hover:to-blue-500 shadow-md"
-              >
-                Submit
-              </button>
+    return (
+      <div className="space-y-4">
+        <div className="bg-blue-50 p-4 rounded-lg mb-4">
+          <h3 className="text-lg font-medium text-blue-800">Your Progress</h3>
+          <div className="mt-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-700">Total Points:</span>
+              <span className="font-bold text-blue-600">{points}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full" 
+                style={{ width: `${Math.min((points / 100) * 100, 100)}%` }}
+              ></div>
             </div>
           </div>
         </div>
-      )}
+
+        <div className="space-y-3">
+          {tasks.length > 0 ? (
+            tasks.map((task, index) => (
+              <div 
+                key={task.id || index}
+                className="flex items-center p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
+              >
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  disabled
+                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 cursor-not-allowed opacity-70"
+                />
+                <span className={`ml-3 ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                  {task.name}
+                </span>
+                <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                  {task.points} points
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No tasks available</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">
+          {domainNames[domains[selectedTab]] || 'Dashboard'}
+        </h1>
+        {user && (
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-700">Welcome, {user.name}!</span>
+            <button
+              onClick={logout}
+              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex space-x-8">
+          {domains.map((domain, index) => (
+            <button
+              key={domain}
+              onClick={() => setSelectedTab(index)}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                selectedTab === index
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {domainNames[domain] || domain.toUpperCase()}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Content */}
+      <div className="bg-white rounded-lg shadow p-6">
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        ) : selectedTab === domains.indexOf('tasks') ? (
+          renderTasks()
+        ) : (
+          renderLeaderboard(domains[selectedTab])
+        )}
+      </div>
     </div>
   );
 };

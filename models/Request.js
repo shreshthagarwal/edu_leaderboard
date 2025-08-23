@@ -1,11 +1,35 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const requestSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  taskDescription: { type: String, required: true },
-  pointsRequested: { type: Number },
-  status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
-  customPoints: { type: Number },
-}, { timestamps: true }); // Enable timestamps
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['role_change', 'points_update', 'other'],
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  details: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
+  },
+  response: {
+    message: String,
+    respondedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    respondedAt: Date
+  }
+}, {
+  timestamps: true
+});
 
-module.exports = mongoose.model('Request', requestSchema);
+export default mongoose.model('Request', requestSchema);

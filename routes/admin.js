@@ -1,7 +1,8 @@
-const express = require('express');
-const authenticate = require('../middleware/authenticate');
-const User = require('../models/User');
-const Request = require('../models/Request');
+import express from 'express';
+import authenticate from '../middleware/authenticate.js';
+import User from '../models/User.js';
+import Request from '../models/Request.js';
+
 const router = express.Router();
 
 // Middleware to check role
@@ -56,4 +57,4 @@ router.post('/assign-points', authenticate, checkAdminRole, async (req, res) => 
   }
 });
 
-module.exports = router;
+export default router;

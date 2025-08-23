@@ -1,7 +1,8 @@
-const express = require('express');
-const authenticate = require('../middleware/authenticate');
-const User = require('../models/User');
-const Request = require('../models/Request');
+import express from 'express';
+import authenticate from '../middleware/authenticate.js';
+import User from '../models/User.js';
+import Request from '../models/Request.js';
+
 const router = express.Router();
 
 // Middleware to check role
@@ -11,6 +12,7 @@ const checkStudentRole = (req, res, next) => {
   }
   next();
 };
+
 // Leaderboard route
 router.get('/leaderboard', authenticate, checkStudentRole, async (req, res) => {
   const students = await User.find({ role: 'student' }).sort({ points: -1 });
@@ -40,4 +42,4 @@ router.post('/request', authenticate, checkStudentRole, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

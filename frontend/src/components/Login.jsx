@@ -1,69 +1,131 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import logo from '../assets/logo.png'; // Update with the correct path to your logo
+import { useAuth } from '../contexts/AuthContext';
+import logo from '../assets/logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(''); // State for error messages
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      return setError('Please fill in all fields');
+    }
+
     try {
-      const res = await axios.post('https://edu-leaderboard-backend.vercel.app/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role);
-      res.data.role === 'admin' ? navigate('/admin') : navigate('/dashboard');
+      setError('');
+      setLoading(true);
+      await login(email, password);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Unexpected error');
+      setError(err.message || 'Failed to log in');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Back Button */}
-      <Link
-        to="/"
-        className="absolute top-4 left-4 text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 underline flex items-center"
-      >
-        <span className="mr-1">&#8592;</span> Back
-      </Link>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <img className="mx-auto h-24 w-auto" src={logo} alt="Logo" />
+        <h2 className="mt-6 text-center text-3xl font-extrabold">
+          Sign in to your account
+        </h2>
+      </div>
 
-      {/* Heading */}
-      <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-green-400 to-pink-500 bg-clip-text text-transparent mb-8">
-        Login
-      </h2>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 bg-red-500 text-white p-3 rounded-md">
+              {error}
+            </div>
+          )}
+          
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium">
+                Email address
+              </label>
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
 
-      {/* Logo */}
-      <img src={logo} alt="Logo" className="w-40 h-40 mb-8 rounded-full shadow-lg" />
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium">
+                Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
 
-      {/* Form */}
-      <form onSubmit={handleLogin} className="w-80 flex flex-col gap-4">
-        
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        <button
-          type="submit"
-          className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-green-400 to-blue-400 rounded-lg hover:from-green-500 hover:to-blue-500 shadow-md"
-        >
-          Login
-        </button>
-      </form>
+            <div className="flex items-center justify-between">
+              <div className="text-sm">
+                <a href="#" className="font-medium text-indigo-400 hover:text-indigo-300">
+                  Forgot your password?
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-800 text-gray-400">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Link
+                to="/signup"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-400 hover:text-indigo-300"
+              >
+                Create a new account
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
