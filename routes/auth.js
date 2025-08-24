@@ -16,6 +16,46 @@ const DEFAULT_TASKS = [
   { name: 'Task 3', details: 'Submit assignment', points: 20 }
 ];
 
+// Domain-specific tasks
+const DOMAIN_TASKS = {
+  webd: [
+    { name: 'Task 1', completed: false, points: 10 },
+    { name: 'Task 2', completed: false, points: 10 },
+    { name: 'Task 3', completed: false, points: 10 },
+    { name: 'Task 4', completed: false, points: 10 },
+    { name: 'Task 5', completed: false, points: 10 },
+    { name: 'Task 6', completed: false, points: 10 },
+    { name: 'Task 7', completed: false, points: 10 },
+    { name: 'Task 8', completed: false, points: 10 },
+    { name: 'Task 9', completed: false, points: 10 },
+    { name: 'Task 10', completed: false, points: 10 }
+  ],
+  aiml: [
+    { name: 'Task 1', completed: false, points: 10 },
+    { name: 'Task 2', completed: false, points: 10 },
+    { name: 'Task 3', completed: false, points: 10 },
+    { name: 'Task 4', completed: false, points: 10 },
+    { name: 'Task 5', completed: false, points: 10 },
+    { name: 'Task 6', completed: false, points: 10 },
+    { name: 'Task 7', completed: false, points: 10 },
+    { name: 'Task 8', completed: false, points: 10 },
+    { name: 'Task 9', completed: false, points: 10 },
+    { name: 'Task 10', completed: false, points: 10 }
+  ],
+  dsa: [
+    { name: 'Task 1', completed: false, points: 10 },
+    { name: 'Task 2', completed: false, points: 10 },
+    { name: 'Task 3', completed: false, points: 10 },
+    { name: 'Task 4', completed: false, points: 10 },
+    { name: 'Task 5', completed: false, points: 10 },
+    { name: 'Task 6', completed: false, points: 10 },
+    { name: 'Task 7', completed: false, points: 10 },
+    { name: 'Task 8', completed: false, points: 10 },
+    { name: 'Task 9', completed: false, points: 10 },
+    { name: 'Task 10', completed: false, points: 10 }
+  ]
+};
+
 // Input validation rules
 const validateSignup = [
   body('name').trim().notEmpty().withMessage('Name is required'),
@@ -38,7 +78,6 @@ const validateSignup = [
   body('branch').trim().notEmpty().withMessage('Branch is required'),
   body('year').isInt({ min: 1, max: 4 }).withMessage('Year must be between 1 and 4')
 ];
-
 
 // Initialize Google Sheets
 const initGoogleSheets = async () => {
@@ -70,26 +109,18 @@ router.post('/signup', validateSignup, async (req, res) => {
 
     const { name, email, password, domain, branch, year } = req.body;
     
-    // Create new user with exact email (preserving dots and case)
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user with domain-specific tasks
     const user = new User({
-      name: name.trim(),
-      email: email,  
-      password: await bcrypt.hash(password, 10),
+      name,
+      email,
+      password: hashedPassword,
       domain,
-      branch: branch.trim(),
-      year: parseInt(year),
-      tasks: [
-        { name: 'Task 1', completed: false, points: 10 },
-        { name: 'Task 2', completed: false, points: 10 },
-        { name: 'Task 3', completed: false, points: 10 },
-        { name: 'Task 4', completed: false, points: 10 },
-        { name: 'Task 5', completed: false, points: 10 },
-        { name: 'Task 6', completed: false, points: 10 },
-        { name: 'Task 7', completed: false, points: 10 },
-        { name: 'Task 8', completed: false, points: 10 },
-        { name: 'Task 9', completed: false, points: 10 },
-        { name: 'Task 10', completed: false, points: 10 }
-      ],
+      branch,
+      year,
+      tasks: DOMAIN_TASKS[domain] || [],
       role: 'student',
       points: 0,
       attendance: 0
@@ -97,7 +128,7 @@ router.post('/signup', validateSignup, async (req, res) => {
 
     await user.save();
 
-    // Add user to Google Sheets
+    // Add user to Google Sheets with their domain-specific tasks
     try {
       console.log('Attempting to add user to Google Sheets:', { email: user.email, domain });
       await googleSheets.updateUserWithTasks(
@@ -110,16 +141,21 @@ router.post('/signup', validateSignup, async (req, res) => {
           points: user.points,
           attendance: user.attendance
         },
-        user.tasks
+        user.tasks.map(task => ({
+          name: task.name,
+          completed: task.completed || false,
+          points: task.points || 0
+        }))
       );
-      console.log(`Successfully added ${user.email} to Google Sheets`);
+      console.log(`Successfully added ${user.email} to Google Sheets with ${user.tasks.length} tasks`);
     } catch (sheetError) {
       console.error('Error adding user to Google Sheets:', {
         message: sheetError.message,
         stack: sheetError.stack,
         user: { email: user.email, domain }
       });
-      // Don't fail the signup, just log the error
+      // Don't fail the request if Google Sheets update fails
+      console.warn('User created but Google Sheets update failed. User can still use the system.');
     }
 
     // Generate token
