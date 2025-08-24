@@ -137,20 +137,35 @@ class GoogleSheetsService {
   }
 
   async updateUserWithTasks(domain, userData, tasks = []) {
+    this.checkInitialized();
+    
     try {
-      this.checkInitialized();
+      if (!domain) {
+        console.error('Domain is required to update user tasks');
+        return;
+      }
+
       const sheetName = domain.toUpperCase();
-      const baseHeaders = ['Rank', 'Name', 'Email', 'Branch', 'Year', 'Attendance', 'Points'];
+      console.log(`Updating user in sheet: ${sheetName}`, { email: userData.email });
+
+      // Get or create the sheet with default headers
+      const defaultHeaders = [
+        'Rank', 'Name', 'Email', 'Branch', 'Year', 'Attendance', 'Points'
+      ];
       
-      // Get or create the sheet with base headers
-      const sheet = await this.getOrCreateSheet(sheetName, baseHeaders);
+      const sheet = await this.getOrCreateSheet(sheetName, defaultHeaders);
       
-      // Load existing headers
+      // Get existing headers
       await sheet.loadHeaderRow();
       const existingHeaders = sheet.headerValues || [];
       
       // Add task columns if they don't exist
-      const taskHeaders = tasks.map((task, index) => `Task: ${task.name || index + 1}`);
+      const taskHeaders = [];
+      tasks.forEach((task, index) => {
+        const taskName = task.name || `Task ${index + 1}`;
+        taskHeaders.push(`Task: ${taskName}`);
+      });
+      
       const headersToAdd = taskHeaders.filter(header => !existingHeaders.includes(header));
       
       if (headersToAdd.length > 0) {
@@ -181,9 +196,12 @@ class GoogleSheetsService {
       };
       
       // Add task statuses to the row data
-      tasks.forEach((task, index) => {
-        const taskHeader = `Task: ${task.name || index + 1}`;
-        userRowData[taskHeader] = task.completed ? '✅' : '❌';
+      tasks.forEach((task) => {
+        const taskName = task.name || '';
+        const taskHeader = `Task: ${taskName}`;
+        if (allHeaders.includes(taskHeader)) {
+          userRowData[taskHeader] = task.completed ? '✅' : '❌';
+        }
       });
 
       if (userRowIndex !== -1) {
@@ -195,37 +213,27 @@ class GoogleSheetsService {
           }
         });
         await row.save();
+        console.log(`Updated user ${userData.email} in ${sheetName} sheet`);
       } else {
         // Add new row with all columns
         const newRowData = {};
         allHeaders.forEach(header => {
-          // Use the value from userRowData if it exists, otherwise use empty string
-          newRowData[header] = userRowData[header] ?? '';
+          newRowData[header] = userRowData[header] || ''; // Fill with empty string for new columns
         });
+        
         await sheet.addRow(newRowData);
+        console.log(`Added new user ${userData.email} to ${sheetName} sheet`);
       }
-
-      // After updating, sort the sheet by Points in descending order
-      await sheet.loadHeaderRow();
-      const allRows = await sheet.getRows();
       
-      // Sort rows by Points (descending) and update Rank
-      allRows.sort((a, b) => {
-        const pointsA = parseInt(a.get('Points') || '0');
-        const pointsB = parseInt(b.get('Points') || '0');
-        return pointsB - pointsA; // Descending order
-      });
-
-      // Update ranks and save all rows
-      for (let i = 0; i < allRows.length; i++) {
-        allRows[i].set('Rank', (i + 1).toString());
-        await allRows[i].save();
-      }
-
-      console.log(`Updated user ${userData.email} in ${sheetName} sheet with ${tasks.length} tasks`);
       return true;
+      
     } catch (error) {
-      console.error('Error in updateUserWithTasks:', error.message);
+      console.error('Error updating user in Google Sheets:', {
+        message: error.message,
+        stack: error.stack,
+        userEmail: userData?.email,
+        domain
+      });
       throw error;
     }
   }
