@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import logo from '../assets/logo.png'; // Update with the correct path to your logo
+import { FiLoader, FiArrowLeft } from 'react-icons/fi';
+import logo from '../assets/logo.png';
 import { API_BASE_URL } from '../config';
 
 const Signup = () => {
@@ -14,6 +15,7 @@ const Signup = () => {
     domain: 'webd' // Default domain
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,113 +28,224 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/signup`, formData);
-      navigate('/login'); // Navigate to login on success
+      await axios.post(`${API_BASE_URL}/auth/signup`, formData);
+      navigate('/login', { 
+        state: { 
+          message: 'Registration successful! Please log in.' 
+        } 
+      });
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'An error occurred during signup');
+      console.error('Signup error:', err);
+      
+      // Handle validation errors
+      if (err.response?.data?.errors) {
+        const fieldErrors = err.response.data.errors;
+        const fieldMessages = fieldErrors.map(error => 
+          `${error.field ? `${error.field}: ` : ''}${error.message}`
+        );
+        setError(fieldMessages.join('\n'));
+      } 
+      // Handle duplicate email
+      else if (err.response?.data?.message === 'Email already in use') {
+        setError('This email is already registered. Please use a different email or log in.');
+      }
+      // Handle server errors
+      else if (err.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      }
+      // Handle network errors
+      else if (!err.response) {
+        setError('Network error. Please check your connection and try again.');
+      }
+      // Fallback error
+      else {
+        setError(err.response?.data?.message || 'An error occurred during signup. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Back Button */}
-      <Link
-        to="/"
-        className="absolute top-4 left-4 text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 underline flex items-center"
-      >
-        <span className="mr-1">&#8592;</span> Back
-      </Link>
-
-      {/* Heading */}
-      <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-green-400 to-pink-500 bg-clip-text text-transparent mb-8">
-        Signup
-      </h2>
-
-      {/* Logo */}
-      <img src={logo} alt="Logo" className="w-40 h-40 mb-8 rounded-full shadow-lg" />
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="w-80 flex flex-col gap-4">
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        <input
-          type="text"
-          placeholder="Name"
-          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          value={formData.name}
-          onChange={handleChange}
-          name="name"
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          value={formData.email}
-          onChange={handleChange}
-          name="email"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          value={formData.password}
-          onChange={handleChange}
-          name="password"
-          required
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Branch"
-              className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              value={formData.branch}
-              onChange={handleChange}
-              name="branch"
-              required
-            />
-          </div>
-
-          <div>
-            <select
-              className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              value={formData.year}
-              onChange={handleChange}
-              name="year"
-              required
-            >
-              <option value="">Select Year</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <select
-            className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            value={formData.domain}
-            onChange={handleChange}
-            name="domain"
-            required
-          >
-            <option value="webd">Web Development</option>
-            <option value="aiml">AI/ML</option>
-            <option value="dsa">Data Structures & Algorithms</option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full px-4 py-2 text-lg font-semibold text-white bg-gradient-to-r from-pink-400 to-purple-400 rounded-lg hover:from-pink-500 hover:to-purple-500 shadow-md"
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Back Button */}
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm font-medium text-gray-300 hover:text-white mb-6 transition-colors"
         >
-          Signup
-        </button>
-      </form>
+          <FiArrowLeft className="mr-1" /> Back to Home
+        </Link>
+
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-700/50">
+          <div className="p-8">
+            <div className="text-center mb-8">
+              <img 
+                src={logo} 
+                alt="Logo" 
+                className="mx-auto h-20 w-auto mb-4" 
+              />
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-green-400 to-pink-500 bg-clip-text text-transparent">
+                Create an account
+              </h2>
+              <p className="mt-2 text-gray-400">Join our community today</p>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 text-red-200 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Full Name"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Email"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="••••••••"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="branch" className="block text-sm font-medium text-gray-300 mb-1">
+                    Branch
+                  </label>
+                  <input
+                    type="text"
+                    id="branch"
+                    name="branch"
+                    value={formData.branch}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="e.g., CSE, IT"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">
+                    Year
+                  </label>
+                  <select
+                    id="year"
+                    name="year"
+                    value={formData.year}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    required
+                    disabled={loading}
+                  >
+                    <option value="">Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="domain" className="block text-sm font-medium text-gray-300 mb-1">
+                  Domain
+                </label>
+                <select
+                  id="domain"
+                  name="domain"
+                  value={formData.domain}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  required
+                  disabled={loading}
+                >
+                  <option value="webd">Web Development</option>
+                  <option value="aiml">AI/ML</option>
+                  <option value="dsa">DSA</option>
+                </select>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full flex justify-center items-center py-3 px-4 rounded-lg text-white font-medium transition-all ${
+                    loading 
+                      ? 'bg-blue-600 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-blue-500/20'
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <FiLoader className="animate-spin mr-2" />
+                      Creating Account...
+                    </>
+                  ) : 'Sign Up'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="px-8 py-4 bg-gray-800/50 text-center border-t border-gray-700/50">
+            <p className="text-sm text-gray-400">
+              Already have an account?{' '}
+              <Link 
+                to="/login" 
+                className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

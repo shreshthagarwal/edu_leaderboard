@@ -9,124 +9,136 @@ class GoogleSheetsService {
 
   async init(spreadsheetId) {
     try {
-      console.log('Initializing Google Sheets with spreadsheet ID:', spreadsheetId);
-      
+      if (!spreadsheetId) {
+        throw new Error('Spreadsheet ID is required');
+      }
+
       if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
         throw new Error('Missing required Google service account credentials');
       }
 
-      const serviceAccountAuth = new JWT({
+      console.log('Initializing Google Sheets with spreadsheet ID:', spreadsheetId);
+      
+      const auth = new JWT({
         email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-        scopes: [
-          'https://www.googleapis.com/auth/spreadsheets',
-          'https://www.googleapis.com/auth/drive.file'
-        ],
+        scopes: ['https://www.googleapis.com/auth/spreadsheets']
       });
 
-      this.doc = new GoogleSpreadsheet(spreadsheetId, serviceAccountAuth);
+      this.doc = new GoogleSpreadsheet(spreadsheetId, auth);
       
       // Test the connection
       await this.doc.loadInfo();
       console.log(`Connected to Google Sheets: ${this.doc.title}`);
-      console.log(`Available sheets: ${this.doc.sheetCount}`);
-      
       this.initialized = true;
-      return this.doc;
+      return true;
       
     } catch (error) {
-      console.error('Error initializing Google Sheets:', {
-        message: error.message,
-        code: error.code,
-        response: error.response?.data
-      });
-      
-      if (error.message.includes('invalid_grant')) {
-        console.error('Authentication failed. Please check your service account credentials.');
-      } else if (error.message.includes('Requested entity was not found')) {
-        console.error('Spreadsheet not found. Please check the spreadsheet ID and ensure the service account has access.');
-      }
-      
-      throw error;
+      console.error('Error initializing Google Sheets:', error.message);
+      throw new Error(`Failed to initialize Google Sheets: ${error.message}`);
     }
   }
 
+  checkInitialized() {
+    if (!this.initialized) {
+      throw new Error('Google Sheets not initialized. Call init() first.');
+    }
+    return true;
+  }
+
   async getOrCreateSheet(title, headers) {
-    let sheet;
+    this.checkInitialized();
     try {
-      sheet = this.doc.sheetsByTitle[title];
-      if (!sheet) {
-        sheet = await this.doc.addSheet({ title, headerValues: headers });
-        console.log(`Created new sheet: ${title}`);
-      } else {
-        // Clear existing data but keep header
-        await sheet.clear();
-        await sheet.setHeaderRow(headers);
+      let sheet;
+      try {
+        sheet = this.doc.sheetsByTitle[title];
+        if (!sheet) {
+          sheet = await this.doc.addSheet({ title, headerValues: headers });
+          console.log(`Created new sheet: ${title}`);
+        } else {
+          // Only set headers if they don't match existing ones
+          await sheet.loadHeaderRow();
+          const existingHeaders = sheet.headerValues || [];
+          if (JSON.stringify(existingHeaders) !== JSON.stringify(headers)) {
+            await sheet.setHeaderRow(headers);
+          }
+        }
+        return sheet;
+      } catch (error) {
+        console.error(`Error getting/creating sheet ${title}:`, error);
+        throw error;
       }
-      return sheet;
     } catch (error) {
-      console.error(`Error getting/creating sheet ${title}:`, error);
+      console.error('Error in getOrCreateSheet:', error.message);
       throw error;
     }
   }
 
   async updateSheet(sheetName, rows) {
-    if (!this.initialized) {
-      throw new Error('Google Sheets not initialized');
-    }
-
+    this.checkInitialized();
     try {
-      const headers = ['Rank', 'Name', 'Email', 'Branch', 'Year', 'Attendance', 'Points'];
-      const sheet = await this.getOrCreateSheet(sheetName, headers);
-      
-      // Add rows to the sheet
-      await sheet.addRows(rows);
-      console.log(`Updated ${sheetName} with ${rows.length} rows`);
-      
-      // Auto-resize columns
-      await sheet.autoResizeColumns(1, headers.length);
-      
-      return true;
+      if (!this.initialized) {
+        throw new Error('Google Sheets not initialized');
+      }
+
+      try {
+        const headers = ['Rank', 'Name', 'Email', 'Branch', 'Year', 'Attendance', 'Points'];
+        const sheet = await this.getOrCreateSheet(sheetName, headers);
+        
+        // Add rows to the sheet
+        await sheet.addRows(rows);
+        console.log(`Updated ${sheetName} with ${rows.length} rows`);
+        
+        // Auto-resize columns
+        await sheet.autoResizeColumns(1, headers.length);
+        
+        return true;
+      } catch (error) {
+        console.error('Error updating sheet:', error);
+        throw error;
+      }
     } catch (error) {
-      console.error('Error updating sheet:', error);
+      console.error('Error in updateSheet:', error.message);
       throw error;
     }
   }
 
   async getSheetData(sheetName) {
-    if (!this.initialized) {
-      throw new Error('Google Sheets not initialized');
-    }
-
+    this.checkInitialized();
     try {
-      const sheet = this.doc.sheetsByTitle[sheetName];
-      if (!sheet) {
-        return [];
+      if (!this.initialized) {
+        throw new Error('Google Sheets not initialized');
       }
-      
-      await sheet.loadHeaderRow();
-      const rows = await sheet.getRows();
-      
-      return rows.map(row => {
-        const data = {};
-        sheet.headerValues.forEach(header => {
-          data[header.toLowerCase()] = row[header];
+
+      try {
+        const sheet = this.doc.sheetsByTitle[sheetName];
+        if (!sheet) {
+          return [];
+        }
+        
+        await sheet.loadHeaderRow();
+        const rows = await sheet.getRows();
+        
+        return rows.map(row => {
+          const data = {};
+          sheet.headerValues.forEach(header => {
+            data[header.toLowerCase()] = row[header];
+          });
+          return data;
         });
-        return data;
-      });
+      } catch (error) {
+        console.error('Error getting sheet data:', error);
+        throw error;
+      }
     } catch (error) {
-      console.error('Error getting sheet data:', error);
+      console.error('Error in getSheetData:', error.message);
       throw error;
     }
   }
 
-  // Update user data in the domain sheet with task statuses
-  async updateUserWithTasks(domain, userData, tasks) {
-    if (!this.initialized) {
-      throw new Error('Google Sheets not initialized');
-    }
-
+  async updateUserWithTasks(domain, userData, tasks = []) {
     try {
+      this.checkInitialized();
       const sheetName = domain.toUpperCase();
       const baseHeaders = ['Rank', 'Name', 'Email', 'Branch', 'Year', 'Attendance', 'Points'];
       
@@ -213,7 +225,7 @@ class GoogleSheetsService {
       console.log(`Updated user ${userData.email} in ${sheetName} sheet with ${tasks.length} tasks`);
       return true;
     } catch (error) {
-      console.error('Error updating user in Google Sheets:', error);
+      console.error('Error in updateUserWithTasks:', error.message);
       throw error;
     }
   }

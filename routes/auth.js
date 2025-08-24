@@ -21,10 +21,13 @@ const validateSignup = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email')
     .isEmail().withMessage('Please enter a valid email')
-    .normalizeEmail()
+    .normalizeEmail({
+      gmail_remove_dots: false,
+      gmail_remove_subaddress: false,
+      gmail_convert_googlemaildotcom: false
+    })
     .custom(async (email) => {
-      // Case-insensitive email check
-      const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+      const user = await User.findOne({ email: email.toLowerCase() });
       if (user) {
         throw new Error('Email already in use');
       }
@@ -35,6 +38,7 @@ const validateSignup = [
   body('branch').trim().notEmpty().withMessage('Branch is required'),
   body('year').isInt({ min: 1, max: 4 }).withMessage('Year must be between 1 and 4')
 ];
+
 
 // Initialize Google Sheets
 const initGoogleSheets = async () => {

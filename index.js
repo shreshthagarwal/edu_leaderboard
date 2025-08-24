@@ -3,6 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
+import { createServer } from 'http';
 import User from './models/User.js';
 import authRoutes from './routes/auth.js';
 import studentRoutes from './routes/student.js';
@@ -71,60 +72,78 @@ const createAdmin = async () => {
 const startServer = async () => {
   try {
     // Check required environment variables
-    const requiredEnvVars = [
-      'MONGO_URI',
-      'JWT_SECRET',
-      'GOOGLE_SERVICE_ACCOUNT_EMAIL',
-      'GOOGLE_PRIVATE_KEY',
-      'GOOGLE_SHEETS_ID'
-    ];
-
+    const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+    
     if (missingVars.length > 0) {
-      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+      console.error('❌ Error: Missing required environment variables:', missingVars.join(', '));
+      process.exit(1);
     }
 
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB connected');
+    try {
+      console.log('🔌 Connecting to MongoDB...');
+      await mongoose.connect(process.env.MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      console.log('✅ MongoDB connected successfully');
+    } catch (dbError) {
+      console.error('❌ MongoDB connection error:', dbError.message);
+      console.error('Please check your MongoDB connection string and ensure MongoDB is running');
+      process.exit(1);
+    }
 
-    // Initialize Google Sheets
+    // Initialize Google Sheets if configured
     if (process.env.GOOGLE_SHEETS_ID) {
       try {
-        console.log('Initializing Google Sheets with ID:', process.env.GOOGLE_SHEETS_ID);
-        console.log('Using service account email:', process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
-        
+        console.log('📊 Initializing Google Sheets...');
         await googleSheets.init(process.env.GOOGLE_SHEETS_ID);
-        console.log('Google Sheets initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize Google Sheets:');
-        console.error('Error details:', {
-          message: error.message,
-          code: error.code,
-          response: error.response?.data
-        });
-        console.error('Make sure:');
-        console.error('1. The Google Sheet exists and is accessible');
-        console.error('2. The service account email has edit access to the sheet');
-        console.error('3. The GOOGLE_PRIVATE_KEY is correctly formatted with newlines');
-        process.exit(1);
+        console.log('✅ Google Sheets initialized successfully');
+      } catch (sheetsError) {
+        console.warn('⚠️  Google Sheets initialization warning:', sheetsError.message);
+        console.warn('Google Sheets functionality will be disabled');
       }
-    } else {
-      console.warn('GOOGLE_SHEETS_ID not set. Google Sheets functionality will be disabled');
     }
 
     // Create admin user
-    await createAdmin();
+    try {
+      await createAdmin();
+    } catch (adminError) {
+      console.warn('⚠️  Admin user creation warning:', adminError.message);
+    }
 
+    // Create HTTP server
+    const server = createServer(app);
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`\n🚀 Server running on port ${PORT}`);
+      console.log(`🌐 API available at http://localhost:${PORT}/api`);
+      console.log('\nPress Ctrl+C to stop the server\n');
     });
+
+    // Handle server errors
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use`);
+      } else {
+        console.error('❌ Server error:', error);
+      }
+      process.exit(1);
+    });
+
+    // Handle process termination
+    process.on('SIGINT', () => {
+      console.log('\n🛑 Shutting down server...');
+      server.close(() => {
+        console.log('👋 Server stopped');
+        process.exit(0);
+      });
+    });
+
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('❌ Fatal error during server startup:', error);
     process.exit(1);
   }
 };
