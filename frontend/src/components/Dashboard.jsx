@@ -37,7 +37,7 @@ const Dashboard = () => {
       const leaderboardPromises = domains
         .filter(domain => domain !== 'tasks')
         .map(domain => 
-          axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/leaderboard/${domain}`)
+          axios.get(`${process.env.REACT_APP_API_URL || 'https://edu-leaderboard-backend.vercel.app'}/api/leaderboard/${domain}`)
             .then(res => res.data)
             .catch(error => {
               console.error(`Error fetching ${domain} leaderboard:`, error);
@@ -50,7 +50,7 @@ const Dashboard = () => {
       if (user) {
         try {
           const token = localStorage.getItem('token');
-          const tasksRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/tasks`, {
+          const tasksRes = await axios.get(`${process.env.REACT_APP_API_URL || 'https://edu-leaderboard-backend.vercel.app'}/api/tasks`, {
             headers: { 
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
