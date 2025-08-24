@@ -29,80 +29,80 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Fetch leaderboard data
-      const leaderboardPromises = domains
-        .filter(domain => domain !== 'tasks')
-        .map(domain => 
-          axios.get(`${process.env.REACT_APP_API_URL || 'https://edu-leaderboard-backend.vercel.app'}/api/leaderboard/${domain}`)
-            .then(res => res.data)
-            .catch(error => {
-              console.error(`Error fetching ${domain} leaderboard:`, error);
-              return { success: false, error: `Failed to load ${domain} leaderboard` };
-            })
-        );
-      
-      // Fetch tasks if user is logged in
-      let tasksData = [];
-      if (user) {
-        try {
-          const token = localStorage.getItem('token');
-          const tasksRes = await axios.get(`${process.env.REACT_APP_API_URL || 'https://edu-leaderboard-backend.vercel.app'}/api/tasks`, {
+  try {
+    setLoading(true);
+    setError(null);
+
+    const leaderboardMap = {};
+    let tasksData = [];
+
+    // ✅ Fetch tasks first (if user exists)
+    if (user) {
+      try {
+        const token = localStorage.getItem('token');
+        const tasksRes = await axios.get(
+          `${process.env.REACT_APP_API_URL || 'https://edu-leaderboard-backend.vercel.app'}/api/tasks`,
+          {
             headers: { 
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
-          });
-          
-          if (tasksRes.data.success && Array.isArray(tasksRes.data.tasks)) {
-            tasksData = tasksRes.data.tasks.map((task, index) => ({
-              id: task.id || `task-${index}`,
-              name: task.name || 'Unnamed Task',
-              completed: Boolean(task.completed),
-              points: Number(task.points) || 0
-            }));
-            
-            const userPoints = tasksData
-              .filter(t => t.completed)
-              .reduce((sum, task) => sum + task.points, 0);
-            
-            setPoints(userPoints);
           }
-        } catch (error) {
-          console.error('Error fetching tasks:', error);
-          setError('Failed to load tasks. Please try again.');
-          tasksData = [];
+        );
+
+        if (tasksRes.data.success && Array.isArray(tasksRes.data.tasks)) {
+          tasksData = tasksRes.data.tasks.map((task, index) => ({
+            id: task.id || `task-${index}`,
+            name: task.name || 'Unnamed Task',
+            completed: Boolean(task.completed),
+            points: Number(task.points) || 0
+          }));
+
+          const userPoints = tasksData
+            .filter(t => t.completed)
+            .reduce((sum, task) => sum + task.points, 0);
+
+          setPoints(userPoints);
         }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        setError('Failed to load tasks. Please try again.');
       }
-      
-      const leaderboardResults = await Promise.all(leaderboardPromises);
-      const leaderboardMap = {};
-      
-      domains.filter(domain => domain !== 'tasks').forEach((domain, index) => {
-        if (leaderboardResults[index]?.success) {
-          leaderboardMap[domain] = leaderboardResults[index].data || [];
-        } else {
-          setError(prev => 
-            `${prev ? prev + ' ' : ''}${leaderboardResults[index]?.error || `Failed to load ${domain} leaderboard`}`
-          );
-          leaderboardMap[domain] = [];
-        }
-      });
-      
-      setLeaderboardData(leaderboardMap);
-      setTasks(tasksData);
-      
-    } catch (err) {
-      console.error('API Error:', err);
-      setError('An unexpected error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
     }
-  };
+
+    setTasks(tasksData);
+
+    // ✅ Fetch leaderboard data sequentially
+    for (const domain of domains.filter(d => d !== 'tasks')) {
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL || 'https://edu-leaderboard-backend.vercel.app'}/api/leaderboard/${domain}`
+        );
+
+        if (res.data.success) {
+          leaderboardMap[domain] = res.data.data || [];
+        } else {
+          leaderboardMap[domain] = [];
+          setError(prev => `${prev ? prev + ' ' : ''}Failed to load ${domain} leaderboard`);
+        }
+      } catch (error) {
+        console.error(`Error fetching ${domain} leaderboard:`, error);
+        leaderboardMap[domain] = [];
+        setError(prev => `${prev ? prev + ' ' : ''}Failed to load ${domain} leaderboard`);
+      }
+    }
+
+    setLeaderboardData(leaderboardMap);
+
+  } catch (err) {
+    console.error('API Error:', err);
+    setError('An unexpected error occurred. Please try again.');
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
+
 
   useEffect(() => {
     fetchData();
