@@ -3,40 +3,46 @@ import mongoose from 'mongoose';
 // Domain specific tasks
 const DOMAIN_TASKS = {
   webd: [
-    { name: 'Build a responsive portfolio website', points: 10 },
-    { name: 'Create a CRUD application with React', points: 15 },
-    { name: 'Implement user authentication', points: 20 },
-    { name: 'Build a RESTful API with Node.js', points: 20 },
-    { name: 'Create a responsive landing page', points: 10 },
-    { name: 'Implement form validation', points: 10 },
-    { name: 'Build a weather app with API integration', points: 15 },
-    { name: 'Create a blog with CMS functionality', points: 20 },
-    { name: 'Optimize website performance', points: 15 },
-    { name: 'Deploy a full-stack application', points: 25 }
+    { name: 'Build Personalized HTML/CSS Project (from 6hr video: https://www.youtube.com/watch?v=G3e-cpL7ofc)', points: 100 },
+    { name: 'Watch 22-Hour JavaScript Video Course (Link: https://www.youtube.com/watch?v=EerdGm-ehJQ)', points: 100 },
+    { name: 'Build JavaScript Amazon Clone (Project from JS course)', points: 100 },
+    { name: 'Push Amazon Clone to GitHub (Learn Git: https://www.youtube.com/watch?v=vA5TTz6BXhY)', points: 100 },
+    { name: 'Watch React & TailwindCSS Courses (React: https://www.youtube.com/watch?v=dCLhUialKPQ | Tailwind: https://www.youtube.com/watch?v=6biMWgD6_JY)', points: 100 },
+    { name: 'Build React Quiz App (Using Open Trivia DB API)', points: 100 },
+    { name: 'Complete Backend Course - Node, Express, MongoDB (Playlist: https://youtube.com/playlist?list=PL78RhpUUKSwfeSOOwfE9x6l5jTjn5LbY3)', points: 100 },
+    { name: 'Build Modified Backend Project (Airbnb Clone with a new concept)', points: 100 },
+    { name: 'Plan Final Full-Stack Resume Project (Define problem statement and architecture)', points: 100 },
+    { name: 'Develop & Deploy Final Full-Stack Project (Showcase all learned skills)', points: 100 }
   ],
   aiml: [
-    { name: 'Implement linear regression from scratch', points: 15 },
-    { name: 'Build an image classifier with CNN', points: 25 },
-    { name: 'Create a chatbot using NLP', points: 20 },
-    { name: 'Implement a recommendation system', points: 25 },
-    { name: 'Work with a real-world dataset', points: 15 },
-    { name: 'Train a model with TensorFlow/PyTorch', points: 20 },
-    { name: 'Implement data preprocessing pipeline', points: 15 },
-    { name: 'Create a computer vision application', points: 25 },
-    { name: 'Deploy a machine learning model', points: 20 },
-    { name: 'Work on a Kaggle competition', points: 30 }
+    { name: 'Foundational Python Skills: Core Syntax, Data Structures, and Functions', points: 100 },
+    { name: 'Data Manipulation with NumPy and Pandas: Arrays, DataFrames, and Data Cleaning', points: 100 },
+    { name: 'Data Visualization with Matplotlib and Seaborn: Creating Plots, Charts, and Statistical Graphics', points: 100 },
+    { name: 'Project 1: Practical Application of Python and Data Handling Techniques', points: 100 },
+    { name: 'Supervised Learning Fundamentals: Introduction to Regression and Gradient Descent', points: 100 },
+    { name: 'Advanced Supervised Learning: Multiple Linear Regression and Practical Gradient Descent', points: 100 },
+    { name: 'Classification and Model Optimization: Logistic Regression and Addressing Overfitting', points: 100 },
+    { name: 'Project 2: Capstone Project Applying all Machine Learning Concepts Learned', points: 100 }
   ],
   dsa: [
-    { name: 'Implement common sorting algorithms', points: 15 },
-    { name: 'Solve 20+ Leetcode easy problems', points: 20 },
-    { name: 'Implement binary search tree', points: 15 },
-    { name: 'Solve 15+ Leetcode medium problems', points: 25 },
-    { name: 'Implement graph traversal algorithms', points: 20 },
-    { name: 'Solve 5+ Leetcode hard problems', points: 30 },
-    { name: 'Implement dynamic programming solutions', points: 25 },
-    { name: 'Solve problems on recursion', points: 20 },
-    { name: 'Implement common data structures', points: 25 },
-    { name: 'Participate in a coding competition', points: 30 }
+    { name: 'Implement basic DSA concepts and array operations', points: 100 },
+    { name: 'Solve problems on arrays', points: 100 },
+    { name: 'Implement binary search and string manipulation', points: 100 },
+    { name: 'Solve problems on binary search and strings', points: 100 },
+    { name: 'Implement recursion and backtracking algorithms', points: 100 },
+    { name: 'Solve problems on recursion and backtracking', points: 100 },
+    { name: 'Implement stack and queue from scratch', points: 100 },
+    { name: 'Solve problems on stack and queue', points: 100 },
+    { name: 'Implement sliding window and two pointer techniques', points: 100 },
+    { name: 'Solve problems using sliding window and two pointers', points: 100 },
+    { name: 'Implement linked lists and binary trees', points: 100 },
+    { name: 'Solve problems on linked lists and binary trees', points: 100 },
+    { name: 'Implement binary search trees and heaps', points: 100 },
+    { name: 'Solve problems on binary search trees and heaps', points: 100 },
+    { name: 'Implement advanced heaps and graph algorithms', points: 100 },
+    { name: 'Solve problems on heaps and graphs', points: 100 },
+    { name: 'Participate in weekly quizzes (all weeks)', points: 100 },
+    { name: 'Contribute to weekly discussion sessions', points: 100 }
   ]
 };
 
