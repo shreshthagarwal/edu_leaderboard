@@ -19,40 +19,190 @@ const DEFAULT_TASKS = [
 // Domain-specific tasks
 const DOMAIN_TASKS = {
   webd: [
-    { name: 'Task 1', completed: false, points: 10 },
-    { name: 'Task 2', completed: false, points: 10 },
-    { name: 'Task 3', completed: false, points: 10 },
-    { name: 'Task 4', completed: false, points: 10 },
-    { name: 'Task 5', completed: false, points: 10 },
-    { name: 'Task 6', completed: false, points: 10 },
-    { name: 'Task 7', completed: false, points: 10 },
-    { name: 'Task 8', completed: false, points: 10 },
-    { name: 'Task 9', completed: false, points: 10 },
-    { name: 'Task 10', completed: false, points: 10 }
+    {
+      "name": "Build Personalized HTML/CSS Project (from 6hr video: https://www.youtube.com/watch?v=G3e-cpL7ofc)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Watch 22-Hour JavaScript Video Course (Link: https://www.youtube.com/watch?v=EerdGm-ehJQ)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Build JavaScript Amazon Clone (Project from JS course)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Push Amazon Clone to GitHub (Learn Git: https://www.youtube.com/watch?v=vA5TTz6BXhY)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Watch React & TailwindCSS Courses (React: https://www.youtube.com/watch?v=dCLhUialKPQ | Tailwind: https://www.youtube.com/watch?v=6biMWgD6_JY)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Build React Quiz App (Using Open Trivia DB API)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Complete Backend Course - Node, Express, MongoDB (Playlist: https://youtube.com/playlist?list=PL78RhpUUKSwfeSOOwfE9x6l5jTjn5LbY3)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Build Modified Backend Project (Airbnb Clone with a new concept)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Plan Final Full-Stack Resume Project (Define problem statement and architecture)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Develop & Deploy Final Full-Stack Project (Showcase all learned skills)",
+      "completed": false,
+      "points": 100
+    }
   ],
   aiml: [
-    { name: 'Task 1', completed: false, points: 10 },
-    { name: 'Task 2', completed: false, points: 10 },
-    { name: 'Task 3', completed: false, points: 10 },
-    { name: 'Task 4', completed: false, points: 10 },
-    { name: 'Task 5', completed: false, points: 10 },
-    { name: 'Task 6', completed: false, points: 10 },
-    { name: 'Task 7', completed: false, points: 10 },
-    { name: 'Task 8', completed: false, points: 10 },
-    { name: 'Task 9', completed: false, points: 10 },
-    { name: 'Task 10', completed: false, points: 10 }
+    {
+      "name": "Foundational Python Skills: Core Syntax, Data Structures, and Functions",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Data Manipulation with NumPy and Pandas: Arrays, DataFrames, and Data Cleaning",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Data Visualization with Matplotlib and Seaborn: Creating Plots, Charts, and Statistical Graphics",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Project 1: Practical Application of Python and Data Handling Techniques",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Supervised Learning Fundamentals: Introduction to Regression and Gradient Descent",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Advanced Supervised Learning: Multiple Linear Regression and Practical Gradient Descent",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Classification and Model Optimization: Logistic Regression and Addressing Overfitting",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Project 2: Capstone Project Applying all Machine Learning Concepts Learned",
+      "completed": false,
+      "points": 100
+    }
   ],
   dsa: [
-    { name: 'Task 1', completed: false, points: 10 },
-    { name: 'Task 2', completed: false, points: 10 },
-    { name: 'Task 3', completed: false, points: 10 },
-    { name: 'Task 4', completed: false, points: 10 },
-    { name: 'Task 5', completed: false, points: 10 },
-    { name: 'Task 6', completed: false, points: 10 },
-    { name: 'Task 7', completed: false, points: 10 },
-    { name: 'Task 8', completed: false, points: 10 },
-    { name: 'Task 9', completed: false, points: 10 },
-    { name: 'Task 10', completed: false, points: 10 }
+    {
+      "name": "Implement basic DSA concepts and array operations",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems on arrays",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Implement binary search and string manipulation",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems on binary search and strings",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Implement recursion and backtracking algorithms",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems on recursion and backtracking",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Implement stack and queue from scratch",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems on stack and queue",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Implement sliding window and two pointer techniques",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems using sliding window and two pointers",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Implement linked lists and binary trees",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems on linked lists and binary trees",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Implement binary search trees and heaps",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems on binary search trees and heaps",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Implement advanced heaps and graph algorithms",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Solve problems on heaps and graphs",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Participate in weekly quizzes (all weeks)",
+      "completed": false,
+      "points": 100
+    },
+    {
+      "name": "Contribute to weekly discussion sessions",
+      "completed": false,
+      "points": 100
+    }
   ]
 };
 
