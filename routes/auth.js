@@ -302,7 +302,13 @@ router.post('/signup', validateSignup, async (req, res) => {
       console.error('Error adding user to Google Sheets:', {
         message: sheetError.message,
         stack: sheetError.stack,
-        user: { email: user.email, domain }
+        user: { 
+          email: user.email, 
+          domain,
+          sheetName: domain.toUpperCase(),
+          tasksCount: user.tasks?.length || 0
+        },
+        errorDetails: sheetError.response?.data || 'No additional error details'
       });
       // Don't fail the request if Google Sheets update fails
       console.warn('User created but Google Sheets update failed. User can still use the system.');
