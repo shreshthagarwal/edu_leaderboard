@@ -16,7 +16,7 @@ const Signup = () => {
     e.preventDefault();
     const fullName = `${name} ${branch}-${specialization}`;
     try {
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/auth/signup`, { name: fullName, email, password });
+      const res = await axios.post(`https://edu-leaderboard-backend.vercel.app/auth/signup`, { name: fullName, email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role);
       res.data.role === 'admin' ? navigate('/admin') : navigate('/dashboard');

@@ -11,7 +11,7 @@ const AdminPanel = () => {
   const [selectedStudents, setSelectedStudents] = useState(new Set());
 
   const getAuthHeaders = () => ({ headers: { Authorization: localStorage.getItem('token') } });
-  const BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+  const BASE_URL = 'https://edu-leaderboard-backend.vercel.app';
 
   useEffect(() => {
     fetchLeaderboard();
