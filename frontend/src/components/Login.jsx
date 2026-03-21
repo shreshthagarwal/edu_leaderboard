@@ -12,7 +12,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://edu-leaderboard-backend.vercel.app/auth/login', { email, password });
+      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/auth/login`, { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role);
       res.data.role === 'admin' ? navigate('/admin') : navigate('/dashboard');
@@ -45,6 +45,7 @@ const Login = () => {
         <input
           type="email"
           placeholder="Email"
+          autoComplete="username"
           className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -52,6 +53,7 @@ const Login = () => {
         <input
           type="password"
           placeholder="Password"
+          autoComplete="current-password"
           className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
           onChange={(e) => setPassword(e.target.value)}
           required

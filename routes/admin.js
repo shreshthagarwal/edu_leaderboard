@@ -56,4 +56,49 @@ router.post('/assign-points', authenticate, checkAdminRole, async (req, res) => 
   }
 });
 
+// Bulk handle requests
+router.post('/requests-bulk', authenticate, checkAdminRole, async (req, res) => {
+  const { ids, status, customPoints } = req.body;
+  try {
+    if (status === 'accepted') {
+      const requests = await Request.find({ _id: { $in: ids } });
+      for (let req of requests) {
+        req.customPoints = customPoints;
+        const student = await User.findById(req.studentId);
+        if (student) {
+          student.points += customPoints;
+          await student.save();
+        }
+      }
+    }
+    await Request.deleteMany({ _id: { $in: ids } });
+    res.status(200).json({ message: 'Requests processed successfully' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Bulk assign points
+router.post('/assign-points-bulk', authenticate, checkAdminRole, async (req, res) => {
+  const { ids, points } = req.body;
+  try {
+    await User.updateMany({ _id: { $in: ids } }, { $inc: { points } });
+    res.status(200).json({ message: 'Points bulk assigned successfully' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Bulk delete users
+router.post('/users/bulk-delete', authenticate, checkAdminRole, async (req, res) => {
+  const { ids } = req.body;
+  try {
+    await User.deleteMany({ _id: { $in: ids } });
+    await Request.deleteMany({ studentId: { $in: ids } });
+    res.status(200).json({ message: 'Users and their requests deleted successfully' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = router;

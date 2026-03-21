@@ -14,8 +14,13 @@ router.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
-    res.status(201).json({ message: 'User registered successfully' });
+
+    const token = jwt.sign({ id: user._id, role: user.role }, SECRET_KEY);
+    res.status(201).json({ token, role: user.role, message: 'User registered successfully' });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
     res.status(400).json({ error: err.message });
   }
 });

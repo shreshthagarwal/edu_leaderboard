@@ -7,14 +7,19 @@ const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [branch, setBranch] = useState('');
+  const [specialization, setSpecialization] = useState('');
   const [error, setError] = useState(''); // State for error messages
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    const fullName = `${name} ${branch}-${specialization}`;
     try {
-      await axios.post('https://edu-leaderboard-backend.vercel.app/auth/signup', { name, email, password });
-      navigate('/login'); // Navigate to login on success
+      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/auth/signup`, { name: fullName, email, password });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('role', res.data.role);
+      res.data.role === 'admin' ? navigate('/admin') : navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Unexpected error');
     }
@@ -44,13 +49,44 @@ const Signup = () => {
         <input
           type="text"
           placeholder="Name"
+          autoComplete="name"
           className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
           onChange={(e) => setName(e.target.value)}
           required
         />
+        <select
+          value={branch}
+          onChange={(e) => setBranch(e.target.value)}
+          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+          required
+        >
+          <option value="" disabled hidden>Select Branch</option>
+          <option value="CSE-1">CSE-1</option>
+          <option value="CSE-2">CSE-2</option>
+          <option value="IT-1">IT-1</option>
+          <option value="IT-2">IT-2</option>
+          <option value="ECE-1">ECE-1</option>
+          <option value="ECE-2">ECE-2</option>
+          <option value="ECE-3">ECE-3</option>
+          <option value="EEE">EEE</option>
+          <option value="ICE">ICE</option>
+        </select>
+        <select
+          value={specialization}
+          onChange={(e) => setSpecialization(e.target.value)}
+          className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+          required
+        >
+          <option value="" disabled hidden>Select Specialization</option>
+          <option value="AI/ML">AI/ML</option>
+          <option value="Data Science">Data Science</option>
+          <option value="CSE">CSE</option>
+          <option value="Core">Core</option>
+        </select>
         <input
           type="email"
           placeholder="Email"
+          autoComplete="username"
           className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -58,6 +94,7 @@ const Signup = () => {
         <input
           type="password"
           placeholder="Password"
+          autoComplete="new-password"
           className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
           onChange={(e) => setPassword(e.target.value)}
           required
